@@ -1,0 +1,10 @@
+- name: Deploy Flask App
+  hosts: local
+  become: true
+  tasks:
+    - name: Stop existing container
+      shell: docker rm -f myapp || true
+
+    - name: Run new container
+      shell: docker run -d --name myapp -p 5000:5000 myapp:latest
+
