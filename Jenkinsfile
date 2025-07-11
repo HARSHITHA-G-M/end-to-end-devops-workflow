@@ -3,7 +3,7 @@ pipeline {
   stages {
     stage('Clone Repo') {
       steps {
-        git 'https://github.com/your-username/devops-workflow.git'
+        git 'https://github.com/HARSHITHA-G-M/end-to-end-devops-workflow.git'
       }
     }
     stage('Build Docker Image') {
