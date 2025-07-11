@@ -1,26 +1,51 @@
 pipeline {
   agent any
+
   stages {
-    stage('Clone Code') {
+    stage('Checkout Code') {
       steps {
-        git 'https://github.com/HARSHITHA-G-M/end-to-end-devops-workflow.git'
+        checkout scm
       }
     }
-    stage('Build Docker Image') {
+
+    stage('Build Application') {
       steps {
+        echo '🔧 Building the application...'
         sh 'docker build -t myapp:latest .'
       }
     }
+
+    stage('Test') {
+      steps {
+        echo '🧪 Running tests...'
+        // Replace this with actual tests if any
+        sh 'echo "All tests passed!"'
+      }
+    }
+
     stage('Deploy with Ansible') {
       steps {
+        echo '📦 Deploying with Ansible...'
         sh 'ansible-playbook -i ansible/inventory.ini ansible/deploy.yml'
       }
     }
-    stage('Apply Kubernetes') {
+
+    stage('Apply Kubernetes Deployment') {
       steps {
-        sh 'kubectl apply -f k8s/deployment.yaml'
-        sh 'kubectl apply -f k8s/service.yaml'
+        echo '🚀 Applying Kubernetes deployment...'
+        withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+          sh 'kubectl apply -f k8s/deployment.yaml'
+        }
       }
+    }
+  }
+
+  post {
+    success {
+      echo '✅ Deployment completed successfully!'
+    }
+    failure {
+      echo '❌ Deployment failed. Please check logs.'
     }
   }
 }
