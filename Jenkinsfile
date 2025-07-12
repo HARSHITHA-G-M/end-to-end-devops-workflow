@@ -8,34 +8,39 @@ pipeline {
       }
     }
 
-    stage('Build Application') {
+    stage('Build Docker Image') {
       steps {
-        echo '🔧 Building the application...'
+        echo '🔧 Building Docker image...'
         sh 'docker build -t myapp:latest .'
+    }
+    }
+
+    stage('Export Docker Image as TAR') {
+      steps {
+        echo '📦 Saving image as TAR...'
+        sh 'docker save myapp:latest -o myapp.tar'
       }
     }
 
-    stage('Test') {
+    stage('Load into MicroK8s') {
       steps {
-        echo '🧪 Running tests...'
-        // Replace this with actual tests if any
-        sh 'echo "All tests passed!"'
+        echo '📥 Importing image into MicroK8s (containerd)...'
+        sh 'microk8s ctr image import myapp.tar'
       }
     }
 
-    stage('Deploy with Ansible') {
+    stage('Run Ansible Playbook') {
       steps {
-        echo '📦 Deploying with Ansible...'
+        echo '📦 Running Ansible deployment...'
         sh 'ansible-playbook -i ansible/inventory.ini ansible/deploy.yml'
       }
     }
 
-    stage('Apply Kubernetes Deployment') {
+    stage('Apply Kubernetes YAMLs via MicroK8s') {
       steps {
-        echo '🚀 Applying Kubernetes deployment...'
-        withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-          sh 'kubectl apply -f k8s/deployment.yaml'
-        }
+        echo '🚀 Deploying to MicroK8s...'
+        sh 'microk8s kubectl apply -f k8s/deployment.yaml'
+        sh 'microk8s kubectl apply -f k8s/service.yaml'
       }
     }
   }
